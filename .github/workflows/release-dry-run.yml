@@ -22,7 +22,7 @@ jobs:
       - run: python3 -m py_compile python/bridge.py
       - run: bash scripts/package-release.sh
       - run: cd dist && sha256sum --check SHA256SUMS && unzip -t wednesday-*.zip && tar -tzf wednesday-*.tar.gz >/dev/null
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wednesday-release-dry-run
           path: dist/
