@@ -32,7 +32,7 @@ jobs:
           sha256sum --check SHA256SUMS
           unzip -t "wednesday-${GITHUB_REF_NAME#v}.zip"
           tar -tzf "wednesday-${GITHUB_REF_NAME#v}.tar.gz" >/dev/null
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wednesday-${{ github.ref_name }}
           path: |
