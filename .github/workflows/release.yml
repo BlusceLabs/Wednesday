@@ -40,7 +40,7 @@ jobs:
             dist/wednesday-*.tar.gz
             dist/SHA256SUMS
           if-no-files-found: error
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/wednesday-*.zip
