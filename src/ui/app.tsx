@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useKeyboard,
   useRenderer,
@@ -44,12 +44,28 @@ interface Message {
   banner?: string;
 }
 
-type Tab = "chat" | "tools" | "memories" | "about";
+type Tab = "chat" | "tools" | "memories" | "about" | "activity";
+
+// One line in the live Activity audit trail. `kind` drives the color/glyph.
+type ActivityEntry = {
+  id: number;
+  ts: number;
+  kind: "tool" | "model" | "prompt" | "error" | "run" | "system";
+  text: string;
+  ok?: boolean; // for tool/run entries: success vs failure
+  live?: boolean; // tool currently executing (not yet resolved)
+};
+
+// Monotonic id source for activity entries (module-level so it survives
+// re-renders without causing state churn).
+let activitySeq = 0;
+
 
 const TABS: { name: string; description: string; value: Tab }[] = [
   { name: "Chat", description: "Conversation", value: "chat" },
   { name: "Tools", description: "Command palette", value: "tools" },
   { name: "Memories", description: "Recalled vault", value: "memories" },
+  { name: "Activity", description: "Live audit trail", value: "activity" },
   { name: "About", description: "Info & keys", value: "about" },
 ];
 
@@ -282,6 +298,44 @@ export function App({ runtime }: { runtime: WednesdayRuntime }) {
   const [showThinking, setShowThinking] = useState(false);
   const [stats, setStats] = useState(() => runtime.stats());
 
+  // Live activity feed (the TUI's equivalent of the dashboard Audit log):
+  // every tool call, model change, prompt, error, and run lifecycle event
+  // streamed from `runtime.events` into a scrolling, color-coded trail so the
+  // user can watch exactly what Wednesday is doing in real time. Capped to
+  // keep the in-memory list bounded.
+  const [activity, setActivity] = useState<ActivityEntry[]>([]);
+  const activityRef = useRef<ActivityEntry[]>([]);
+  // Ids of tool entries currently executing, keyed by tool name (most recent
+  // first) so a `tool.end` resolves the matching live line instead of adding a
+  // second entry.
+  const liveToolIds = useRef<Map<string, number[]>>(new Map());
+  const pushActivity = useCallback((entry: Omit<ActivityEntry, "id" | "ts">) => {
+    const next: ActivityEntry = { ...entry, id: activitySeq++, ts: Date.now() };
+    const list = activityRef.current;
+    // Resolve a matching live tool entry when this one finishes it.
+    if (entry.kind === "tool" && entry.ok !== undefined) {
+      const ids = liveToolIds.current.get(entry.text) ?? [];
+      const matchId = ids.pop();
+      if (ids.length === 0) liveToolIds.current.delete(entry.text);
+      else liveToolIds.current.set(entry.text, ids);
+      if (matchId !== undefined) {
+        const updated = list.map((e) =>
+          e.id === matchId ? { ...e, live: false, ok: entry.ok } : e,
+        );
+        activityRef.current = updated.slice(-400);
+        setActivity(activityRef.current);
+        return;
+      }
+    }
+    if (entry.kind === "tool" && entry.live) {
+      const ids = liveToolIds.current.get(entry.text) ?? [];
+      ids.push(next.id);
+      liveToolIds.current.set(entry.text, ids);
+    }
+    activityRef.current = [...list, next].slice(-400);
+    setActivity(activityRef.current);
+  }, []);
+
   // /models popup selector: mirrors opencode's model picker — a centered
   // dialog with a search input, grouped (by provider) model list, the
   // current model marked, and arrow/enter/esc navigation handled globally.
@@ -498,6 +552,36 @@ export function App({ runtime }: { runtime: WednesdayRuntime }) {
             ...current,
             { role: "system", text: `Error: ${event.message}` },
           ]);
+          pushActivity({ kind: "error", text: event.message });
+        }
+        if (event.type === "tool.start") {
+          pushActivity({
+            kind: "tool",
+            text: event.name,
+            live: true,
+          });
+        }
+        if (event.type === "tool.end") {
+          pushActivity({
+            kind: "tool",
+            text: event.name,
+            ok: !event.isError,
+          });
+        }
+        if (event.type === "model.changed") {
+          pushActivity({
+            kind: "model",
+            text: `${event.provider}/${event.id}`,
+          });
+        }
+        if (event.type === "notice") {
+          pushActivity({ kind: "system", text: event.message });
+        }
+        if (event.type === "status" && event.value === "thinking") {
+          pushActivity({ kind: "run", text: "started a run", live: true });
+        }
+        if (event.type === "assistant.done") {
+          pushActivity({ kind: "run", text: "run complete", ok: true });
         }
       }),
     [runtime],
@@ -566,7 +650,7 @@ export function App({ runtime }: { runtime: WednesdayRuntime }) {
       renderer.console.toggle();
       return;
     }
-    if (key.ctrl && /^[1-4]$/.test(key.name)) {
+    if (key.ctrl && /^[1-5]$/.test(key.name)) {
       const next = TABS[Number(key.name) - 1];
       if (next) setTab(next.value);
       return;
@@ -1054,10 +1138,71 @@ export function App({ runtime }: { runtime: WednesdayRuntime }) {
           />
           <Divider />
           <text fg={HINT}>
-            Ctrl+T thinking · Ctrl+1-4 tabs · Ctrl+L console · Esc quit ·
+            Ctrl+T thinking · Ctrl+1-5 tabs · Ctrl+L console · Esc quit ·
             ↑/↓ approve · Enter send
           </text>
           <text fg={HINT}>End · jump to latest message in Chat</text>
+        </box>
+      )}
+
+      {tab === "activity" && (
+        <box style={{ flexDirection: "column", flexGrow: 1, padding: 1, gap: 1 }}>
+          <SectionHeader
+            label="Activity"
+            right={`${activity.length} events`}
+          />
+          <Divider />
+          <scrollbox
+            style={{ flexGrow: 1, paddingLeft: 1, paddingRight: 1 }}
+            scrollbarOptions={{ visible: false }}
+            stickyScroll
+            stickyStart="bottom"
+          >
+            <box style={{ flexDirection: "column", gap: 0 }}>
+              {activity.length === 0 ? (
+                <text fg={HINT}>
+                  Nothing yet — tool calls, model changes, and runs will appear
+                  here as Wednesday works.
+                </text>
+              ) : (
+                activity.map((e) => {
+                  const t = new Date(e.ts);
+                  const hh = String(t.getHours()).padStart(2, "0");
+                  const mm = String(t.getMinutes()).padStart(2, "0");
+                  const ss = String(t.getSeconds()).padStart(2, "0");
+                  let glyph = "•";
+                  let color = COLORS.system;
+                  if (e.kind === "tool") {
+                    glyph = e.live ? "▸" : e.ok ? "✓" : "✗";
+                    color = e.live
+                      ? COLORS.thinking
+                      : e.ok
+                        ? COLORS.wednesday
+                        : COLORS.error;
+                  } else if (e.kind === "model") {
+                    glyph = "◈";
+                    color = COLORS.you;
+                  } else if (e.kind === "run") {
+                    glyph = e.live ? "▸" : e.ok ? "✓" : "✗";
+                    color = e.live ? COLORS.thinking : COLORS.wednesday;
+                  } else if (e.kind === "error") {
+                    glyph = "✗";
+                    color = COLORS.error;
+                  } else if (e.kind === "system") {
+                    glyph = "·";
+                    color = COLORS.muted;
+                  }
+                  return (
+                    <text key={e.id} fg={color}>
+                      {`${hh}:${mm}:${ss}`.padEnd(11)}
+                      {`${glyph} `.padEnd(3)}
+                      {e.text}
+                    </text>
+                  );
+                })
+              )}
+            </box>
+          </scrollbox>
         </box>
       )}
 
