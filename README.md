@@ -1,6 +1,14 @@
-# Wednesday 1.0 RC
+# Wednesday
 
-A local-first personal agent built on Pi Agent Core, Pi AI, OpenTUI, durable Markdown memory, an authenticated dashboard, and a 106-tool registry.
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/lang-TypeScript-3178c6.svg" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0--rc.7-orange.svg" />
+</p>
+
+A local-first personal agent built on [Pi Agent Core](https://github.com/earendil-works/pi-agent-core), Pi AI, [OpenTUI](https://github.com/anomalyco/opentui), durable Markdown memory, an authenticated dashboard, and a 106-tool registry.
+
+> **Status:** `1.0.0-rc.7` — production candidate. Issues and PRs welcome.
 
 ## Performance (rc.6)
 
@@ -180,3 +188,15 @@ bun run check
 ```
 
 Full browser smoke tests require network access and must target sites you control.
+
+## Contributing
+
+Wednesday is open source under the [MIT License](./LICENSE). Contributions are
+welcome — please read [CONTRIBUTING.md](./CONTRIBUTING.md) for setup, commit
+style, and conventions, and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for our
+community standards. Found a vulnerability? See [SECURITY.md](./SECURITY.md) and
+report it privately rather than opening a public issue.
+
+## License
+
+[MIT](./LICENSE) © 2026 BlusceLabs.
