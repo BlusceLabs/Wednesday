@@ -1,8 +1,18 @@
 {
   "name": "wednesday",
   "version": "1.0.0-rc.7",
-  "private": true,
+  "description": "A local-first personal agent built on Pi Agent Core, Pi AI, OpenTUI, durable Markdown memory, an authenticated dashboard, and a 106-tool registry.",
   "type": "module",
+  "license": "MIT",
+  "author": "BlusceLabs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlusceLabs/Wednesday.git"
+  },
+  "homepage": "https://github.com/BlusceLabs/Wednesday",
+  "bugs": {
+    "url": "https://github.com/BlusceLabs/Wednesday/issues"
+  },
   "bin": {
     "wednesday": "./src/index.tsx"
   },
