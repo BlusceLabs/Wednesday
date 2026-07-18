@@ -1,0 +1,9 @@
+node_modules/
+.wednesday/
+dist/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.DS_Store

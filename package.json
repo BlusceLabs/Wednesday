@@ -1,0 +1,33 @@
+{
+  "name": "wednesday",
+  "version": "1.0.0-rc.7",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wednesday": "./src/index.tsx"
+  },
+  "scripts": {
+    "dev": "bun run src/index.tsx",
+    "serve": "bun run src/serve.ts",
+    "headless": "bun run src/headless.ts",
+    "config": "bun run src/config-cli.ts",
+    "migrate": "bun run src/migrate.ts",
+    "setup:browser": "bun run src/setup-python.ts",
+    "doctor": "bun run src/doctor.ts",
+    "sandbox": "bun run src/sandbox-run.ts",
+    "test": "bun test",
+    "check": "tsc --noEmit",
+    "start": "bun run src/index.tsx"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "0.80.10",
+    "@earendil-works/pi-ai": "0.80.10",
+    "@opentui/core": "0.3.1",
+    "@opentui/react": "0.3.1",
+    "react": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/bun": "1.2.18",
+    "typescript": "5.8.3"
+  }
+}

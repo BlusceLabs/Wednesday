@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "home": "/home/you/.local/share/wednesday",
+  "workspace": "/home/you/projects",
+  "gitHistory": true,
+  "model": {
+    "provider": "anthropic",
+    "id": "claude-sonnet-4-6",
+    "thinkingLevel": "high",
+    "temperature": 0.3,
+    "maxOutputTokens": "auto"
+  },
+  "browser": {
+    "enabled": true,
+    "backend": "auto",
+    "chromiumExecutable": "chromium",
+    "pythonExecutable": "/home/you/.local/share/wednesday/python/bin/python",
+    "respectRobots": true,
+    "allowPrivateHosts": false,
+    "timeoutSeconds": 45
+  },
+  "sandbox": {
+    "enabled": false,
+    "image": "node:24-bookworm-slim",
+    "memoryMb": 512,
+    "cpus": 1
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 4317,
+    "rateLimit": { "windowMs": 60000, "max": 120 }
+  },
+  "memory": { "embeddingsEnabled": true, "staleDays": 45 },
+  "scheduler": {
+    "enabled": false,
+    "tasks": [
+      {
+        "id": "morning-briefing",
+        "name": "Morning briefing",
+        "prompt": "Summarize anything I should know this morning.",
+        "intervalMinutes": 1440
+      }
+    ]
+  },
+  "git": { "remote": null },
+  "voice": { "enabled": false, "engine": "auto", "rate": 1 },
+  "integrations": {
+    "calendar": { "provider": "none" },
+    "email": { "provider": "none" }
+  },
+  "session": { "summarizeAfterMessages": 60, "keepRecentMessages": 24 }
+}
