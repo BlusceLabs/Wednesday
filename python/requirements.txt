@@ -1,2 +1,2 @@
 cloakbrowser==0.4.10
-scrapling[fetchers]==0.4.9
+scrapling[fetchers]==0.4.11
